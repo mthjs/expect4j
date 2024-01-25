@@ -27,7 +27,7 @@ public class Expected<T> {
   }
 
   /**
-   * get returns the expeted value, unless an error was thrown.
+   * get returns the expected value, unless an error was thrown.
    */
   public T get() {
     if (erred()) {
@@ -45,14 +45,14 @@ public class Expected<T> {
   }
 
   /**
-   * erred tells us wheter an error was thrown.
+   * erred tells us whether an error was thrown.
    */
   public boolean erred() {
     return thrown != null;
   }
 
   /**
-   * caught is a convinence function which checks if the the potentially thrown
+   * caught is a convenience function which checks if the potentially thrown
    * error matches the excepted class
    */
   public <T extends Throwable> boolean caught(Class<T> excepted) {
