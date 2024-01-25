@@ -1,0 +1,40 @@
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'jacoco'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "PASSED", "SKIPPED", "FAILED", "STANDARD_ERROR"
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.fork = true
+    options.compilerArgs << '-Werror' << '-Xlint:all'
+}
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:${junit_version}")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${junit_version}")
+}
+
+repositories {
+    mavenCentral()
+}
