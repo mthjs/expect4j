@@ -1,5 +1,6 @@
 package net.expect4j;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,15 @@ class ExpectedTest {
     assertTrue(expectation.erred());
     assertNotNull(expectation.error());
     assertTrue(expectation.caught(RuntimeException.class));
+    assertThrows(RuntimeException.class, () -> expectation.get());
+  }
+
+  @Test
+  void can_deal_with_checked_exceptions() {
+    var expectation = Expected.from(() -> { throw new IOException(); });
+    assertTrue(expectation.erred());
+    assertNotNull(expectation.error());
+    assertTrue(expectation.caught(IOException.class));
     assertThrows(RuntimeException.class, () -> expectation.get());
   }
 

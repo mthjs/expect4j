@@ -1,28 +1,48 @@
 package net.expect4j;
 
-import java.util.function.Supplier;
+import java.util.concurrent.Callable;
 
 /**
- * Expected allows for exceptions to be caught and treated as values.
+ * Expected contains either the promised value of type `T` or some exception.
  *
  * https://en.cppreference.com/w/cpp/utility/expected
+ * https://doc.rust-lang.org/std/result/
  *
  * @param <T> The type of the expected value.
  */
 public class Expected<T> {
 
   /**
-   * from executes supplier and provides an `Expected<T>` which either holds
+   * from executes function and provides an `Expected<T>` which either holds
    * a value or any error that might have been thrown.
    */
-  public static <T> Expected<T> from(Supplier<T> supplier) {
-    var expected = new Expected<T>();
+  public static <T> Expected<T> from(Callable<T> function) {
     try {
-      expected.value = supplier.get();
+      var value = function.call();
+      return Expected.fulfill(value);
     }
     catch (Throwable thrown) {
-      expected.thrown = thrown;
+      return Expected.disappoint(thrown);
     }
+  }
+
+  /**
+   * disappoint creates an `Expected<T>` which has erred with the provided
+   * err.
+   */
+  public static <T> Expected<T> disappoint(Throwable err) {
+    var expected = new Expected<T>();
+    expected.err = err;
+    return expected;
+  }
+
+  /**
+   * fulfill creates an `Expected<T>` which hasn't erred and holds the provided
+   * value.
+   */
+  public static <T> Expected<T> fulfill(T value) {
+    var expected = new Expected<T>();
+    expected.value = value;
     return expected;
   }
 
@@ -31,7 +51,7 @@ public class Expected<T> {
    */
   public T get() {
     if (erred()) {
-      throw new RuntimeException("do proper error handling!", thrown);
+      throw new RuntimeException("do proper error handling!", err);
     } else {
       return value;
     }
@@ -41,14 +61,14 @@ public class Expected<T> {
    * error returns the thrown error, if there was any
    */
   public Throwable error() {
-    return thrown;
+    return err;
   }
 
   /**
    * erred tells us whether an error was thrown.
    */
   public boolean erred() {
-    return thrown != null;
+    return err != null;
   }
 
   /**
@@ -57,7 +77,7 @@ public class Expected<T> {
    */
   public <T extends Throwable> boolean caught(Class<T> excepted) {
     if (erred()) {
-      return excepted.isAssignableFrom(thrown.getClass());
+      return excepted.isAssignableFrom(err.getClass());
     }
     else {
       return false;
@@ -67,5 +87,5 @@ public class Expected<T> {
   private Expected() {}
 
   private T value;
-  private Throwable thrown;
+  private Throwable err;
 }
