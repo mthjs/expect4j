@@ -14,8 +14,17 @@ class ExpectedTest {
     var expectation = Expected.from(() -> true);
     assertFalse(expectation.erred());
     assertNull(expectation.error());
-    assertFalse(expectation.caught(Throwable.class));
+    assertFalse(expectation.caught(Exception.class));
     assertTrue(expectation.get());
+  }
+
+  @Test
+  void knows_how_to_handle_void_functions() {
+    var expectation = Expected.from(() -> noop());
+    assertFalse(expectation.erred());
+    assertNull(expectation.error());
+    assertFalse(expectation.caught(Exception.class));
+    assertNull(expectation.get());
   }
 
   @Test
@@ -23,7 +32,7 @@ class ExpectedTest {
     var expectation = Expected.from(() -> Optional.of(true));
     assertFalse(expectation.erred());
     assertNull(expectation.error());
-    assertFalse(expectation.caught(Throwable.class));
+    assertFalse(expectation.caught(Exception.class));
     assertEquals(expectation.get().getClass(), Optional.class);
     assertTrue(expectation.get().get());
   }
@@ -61,4 +70,6 @@ class ExpectedTest {
       super("special");
     }
   }
+
+  void noop() {}
 }

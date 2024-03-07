@@ -1,7 +1,5 @@
 package net.expect4j;
 
-import java.util.concurrent.Callable;
-
 /**
  * Expected contains either the promised value of type `T` or some exception.
  *
@@ -10,18 +8,39 @@ import java.util.concurrent.Callable;
  *
  * @param <T> The type of the expected value.
  */
-public class Expected<T> {
+public final class Expected<T> {
 
   /**
    * from executes function and provides an `Expected<T>` which either holds
    * a value or any error that might have been thrown.
+   *
+   * @param function
+   * @return
    */
-  public static <T> Expected<T> from(Callable<T> function) {
+  public static <T> Expected<T> from(WithResult<T> function) {
     try {
       var value = function.call();
       return Expected.fulfill(value);
     }
-    catch (Throwable thrown) {
+    catch (Exception thrown) {
+      return Expected.disappoint(thrown);
+    }
+  }
+
+  /**
+   * from executes function and provides an `Expected<Void>`. Unlike an
+   * `Expected<T>`, it holds no value and can only be used to check if the
+   * provided function erred.
+   *
+   * @param function
+   * @return
+   */
+  public static Expected<Void> from(WithoutResult function) {
+    try {
+      function.call();
+      return Expected.fulfill(null);
+    }
+    catch (Exception thrown) {
       return Expected.disappoint(thrown);
     }
   }
@@ -30,7 +49,7 @@ public class Expected<T> {
    * disappoint creates an `Expected<T>` which has erred with the provided
    * err.
    */
-  public static <T> Expected<T> disappoint(Throwable err) {
+  public static <T> Expected<T> disappoint(Exception err) {
     var expected = new Expected<T>();
     expected.err = err;
     return expected;
@@ -60,7 +79,7 @@ public class Expected<T> {
   /**
    * error returns the thrown error, if there was any
    */
-  public Throwable error() {
+  public Exception error() {
     return err;
   }
 
@@ -75,7 +94,7 @@ public class Expected<T> {
    * caught is a convenience function which checks if the potentially thrown
    * error matches the excepted class
    */
-  public <T extends Throwable> boolean caught(Class<T> excepted) {
+  public <T extends Exception> boolean caught(Class<T> excepted) {
     if (erred()) {
       return excepted.isAssignableFrom(err.getClass());
     }
@@ -87,5 +106,15 @@ public class Expected<T> {
   private Expected() {}
 
   private T value;
-  private Throwable err;
+  private Exception err;
+
+  @FunctionalInterface
+  public interface WithResult<T> {
+    T call() throws Exception;
+  }
+
+  @FunctionalInterface
+  public interface WithoutResult {
+    void call() throws Exception;
+  }
 }
